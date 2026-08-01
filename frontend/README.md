@@ -1,6 +1,6 @@
-# GeoIncidencias — Frontend v2.0
+﻿# GeoIncidencias â€” Frontend v2.0
 
-Sistema de gestión geoespacial de incidencias. Rediseño completo del frontend con identidad visual nueva.
+Sistema de gestiÃ³n geoespacial de incidencias. RediseÃ±o completo del frontend con identidad visual nueva.
 
 ---
 
@@ -8,38 +8,38 @@ Sistema de gestión geoespacial de incidencias. Rediseño completo del frontend 
 
 ```
 frontend/
-├── login.html          → Pantalla de acceso / registro
-├── index.html          → Dashboard con mapa y estadísticas
-├── incidencias.html    → Listado y gestión de incidencias
-├── registrar.html      → Formulario de nueva incidencia
-├── mis-apoyos.html     → Incidencias disponibles y mis apoyos
-├── reportes.html       → Gráficas y análisis estadístico
-├── admin.html          → Panel de administración (solo admin)
-├── historial.html      → Historial de actividad (solo admin)
-├── perfil.html         → Mi perfil y cambio de contraseña
-├── styles.css          → Design system completo (paleta, componentes)
-└── js/
-    ├── auth-guard.js   → ← CONFIGURA AQUÍ LA URL DEL BACKEND
-    ├── sidebar.js      → Barra lateral compartida
-    ├── incidencias.js  → Lógica del listado de incidencias
-    ├── registrar.js    → Lógica del formulario de registro
-    ├── mis-apoyos.js   → Lógica de apoyos
-    ├── reportes.js     → Gráficas con Chart.js
-    ├── admin.js        → Lógica del panel admin
-    └── historial.js    → Lógica del historial
+â”œâ”€â”€ login.html          â†’ Pantalla de acceso / registro
+â”œâ”€â”€ index.html          â†’ Dashboard con mapa y estadÃ­sticas
+â”œâ”€â”€ incidencias.html    â†’ Listado y gestiÃ³n de incidencias
+â”œâ”€â”€ registrar.html      â†’ Formulario de nueva incidencia
+â”œâ”€â”€ mis-apoyos.html     â†’ Incidencias disponibles y mis apoyos
+â”œâ”€â”€ reportes.html       â†’ GrÃ¡ficas y anÃ¡lisis estadÃ­stico
+â”œâ”€â”€ admin.html          â†’ Panel de administraciÃ³n (solo admin)
+â”œâ”€â”€ historial.html      â†’ Historial de actividad (solo admin)
+â”œâ”€â”€ perfil.html         â†’ Mi perfil y cambio de contraseÃ±a
+â”œâ”€â”€ styles.css          â†’ Design system completo (paleta, componentes)
+â””â”€â”€ js/
+    â”œâ”€â”€ auth-guard.js   â†’ â† CONFIGURA AQUÃ LA URL DEL BACKEND
+    â”œâ”€â”€ sidebar.js      â†’ Barra lateral compartida
+    â”œâ”€â”€ incidencias.js  â†’ LÃ³gica del listado de incidencias
+    â”œâ”€â”€ registrar.js    â†’ LÃ³gica del formulario de registro
+    â”œâ”€â”€ mis-apoyos.js   â†’ LÃ³gica de apoyos
+    â”œâ”€â”€ reportes.js     â†’ GrÃ¡ficas con Chart.js
+    â”œâ”€â”€ admin.js        â†’ LÃ³gica del panel admin
+    â””â”€â”€ historial.js    â†’ LÃ³gica del historial
 ```
 
 ---
 
-## ⚡ Configuración rápida
+## âš¡ ConfiguraciÃ³n rÃ¡pida
 
 ### 1. Configura la URL del backend
 
-Abre `js/auth-guard.js` y ajusta la primera línea:
+Abre `js/auth-guard.js` y ajusta la primera lÃ­nea:
 
 ```js
 const API = 'http://localhost:8000/api';
-// Si el backend está desplegado, cambia a su URL real:
+// Si el backend estÃ¡ desplegado, cambia a su URL real:
 // const API = 'https://tudominio.com/api';
 ```
 
@@ -57,7 +57,7 @@ php artisan serve             # inicia en http://localhost:8000
 
 ### 3. Abre el frontend
 
-Usa cualquier servidor estático. Opción más simple:
+Usa cualquier servidor estÃ¡tico. OpciÃ³n mÃ¡s simple:
 
 ```bash
 # Con Python
@@ -66,21 +66,21 @@ python3 -m http.server 5500
 # Con Node.js (npx)
 npx serve .
 
-# Con VS Code → instala "Live Server" y clic derecho en login.html → Open with Live Server
+# Con VS Code â†’ instala "Live Server" y clic derecho en login.html â†’ Open with Live Server
 ```
 
 Luego abre: **http://localhost:5500/login.html**
 
 ---
 
-## 🔑 Endpoints del backend que consume el frontend
+## ðŸ”‘ Endpoints del backend que consume el frontend
 
-| Método | Ruta | Descripción |
+| MÃ©todo | Ruta | DescripciÃ³n |
 |--------|------|-------------|
-| POST | /api/auth/login | Iniciar sesión |
+| POST | /api/auth/login | Iniciar sesiÃ³n |
 | POST | /api/auth/registro | Crear cuenta |
-| POST | /api/auth/cambiar-password | Cambiar contraseña |
-| GET  | /api/incidencias | Listar (con filtros y paginación) |
+| POST | /api/auth/cambiar-password | Cambiar contraseÃ±a |
+| GET  | /api/incidencias | Listar (con filtros y paginaciÃ³n) |
 | POST | /api/incidencias | Crear incidencia |
 | GET  | /api/incidencias/{id} | Detalle de incidencia |
 | PUT  | /api/incidencias/{id} | Editar incidencia |
@@ -89,22 +89,22 @@ Luego abre: **http://localhost:5500/login.html**
 | POST | /api/incidencias/{id}/rechazar | Rechazar incidencia (admin) |
 | GET  | /api/incidencias/mapa | Marcadores del mapa |
 | GET  | /api/incidencias/pendientes-aprobacion | Pendientes (admin) |
-| GET  | /api/catalogos/tipos | Catálogo de tipos |
+| GET  | /api/catalogos/tipos | CatÃ¡logo de tipos |
 | GET  | /api/catalogos/subtipos/{id} | Subtipos por tipo |
-| GET  | /api/catalogos/estados | Catálogo de estados |
-| GET  | /api/catalogos/zonas | Catálogo de zonas |
+| GET  | /api/catalogos/estados | CatÃ¡logo de estados |
+| GET  | /api/catalogos/zonas | CatÃ¡logo de zonas |
 | GET  | /api/catalogos/incentivos | Incentivos por prioridad |
 | POST | /api/apoyos | Registrar apoyo |
 | GET  | /api/apoyos/mis-apoyos | Mis apoyos |
-| GET  | /api/apoyos/mi-saldo | Saldo y estadísticas |
+| GET  | /api/apoyos/mi-saldo | Saldo y estadÃ­sticas |
 | GET  | /api/apoyos/pendientes | Apoyos pendientes (admin) |
 | POST | /api/apoyos/{id}/aprobar | Aprobar apoyo (admin) |
 | POST | /api/apoyos/{id}/rechazar | Rechazar apoyo (admin) |
 | GET  | /api/dashboard/resumen | KPIs del dashboard |
-| GET  | /api/dashboard/por-tipo | Incidencias por categoría |
-| GET  | /api/dashboard/ultimas | Últimas incidencias |
-| GET  | /api/reportes/resumen | Resumen del período |
-| GET  | /api/reportes/por-categoria | Por categoría |
+| GET  | /api/dashboard/por-tipo | Incidencias por categorÃ­a |
+| GET  | /api/dashboard/ultimas | Ãšltimas incidencias |
+| GET  | /api/reportes/resumen | Resumen del perÃ­odo |
+| GET  | /api/reportes/por-categoria | Por categorÃ­a |
 | GET  | /api/reportes/por-estado | Por estado |
 | GET  | /api/reportes/tendencia | Tendencia temporal |
 | GET  | /api/reportes/por-responsable | Por responsable |
@@ -114,35 +114,31 @@ Luego abre: **http://localhost:5500/login.html**
 
 ---
 
-## 🎨 Design System
+## ðŸŽ¨ Design System
 
 - **Fondo base:** `#060B18` (azul noche profundo)
 - **Superficie:** `#0C1628` / `#0E1B2E` / `#112038`
-- **Acento primario:** `#00D4FF` (cyan eléctrico)
+- **Acento primario:** `#00D4FF` (cyan elÃ©ctrico)
 - **Alerta / peligro:** `#FF3B6B` (coral)
-- **Éxito:** `#00E5A0` (verde menta)
-- **Advertencia:** `#F59E0B` (ámbar)
-- **Tipografía display:** Space Grotesk
-- **Tipografía body:** Inter
-- **Tipografía mono:** Space Mono
+- **Ã‰xito:** `#00E5A0` (verde menta)
+- **Advertencia:** `#F59E0B` (Ã¡mbar)
+- **TipografÃ­a display:** Space Grotesk
+- **TipografÃ­a body:** Inter
+- **TipografÃ­a mono:** Space Mono
 
 ---
 
 ## Base de datos en la nube
 
 ```
-Host:     MYSQL5036.site4now.net
-Puerto:   3306
-BD:       db_acb211_dbweb
-Usuario:  acb211_dbweb
-Password: daniel2001@
+Las credenciales reales no se suben al repositorio; se configuran en backend-laravel/.env (local, ignorado por git).
 ```
 
 ---
 
 ## CORS en Laravel
 
-Asegúrate de que `config/cors.php` incluya el origen del frontend:
+AsegÃºrate de que `config/cors.php` incluya el origen del frontend:
 
 ```php
 'allowed_origins' => [
@@ -154,3 +150,4 @@ Asegúrate de que `config/cors.php` incluya el origen del frontend:
 'allowed_headers' => ['*'],
 'supports_credentials' => false,
 ```
+
