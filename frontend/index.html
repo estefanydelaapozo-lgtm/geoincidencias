@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GeoIncidencias — Dashboard</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cartocdn.com" crossorigin>
+  <link rel="dns-prefetch" href="//unpkg.com">
+  <link rel="dns-prefetch" href="//cartocdn.com">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.css?v=1">
+  <link rel="stylesheet" href="styles.min.css?v=20260731-6"/>
+</head>
+<body>
+
+<div id="sidebarContainer"></div>
+
+<main class="main-content">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-subtitle" id="dashSubtitulo">Monitoreo de incidencias en tiempo real</div>
+    </div>
+    <div class="flex items-center gap-12">
+      <div class="flex items-center gap-8" style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:8px 14px;">
+        <span class="status-dot online"></span>
+        <span style="font-size:.8rem;color:var(--text-muted);">Sistema activo</span>
+      </div>
+      <a href="registrar.html" class="btn btn-primary">
+        <span>+</span> Nueva incidencia
+      </a>
+    </div>
+  </div>
+
+  <!-- Resumen principal + acciones rápidas -->
+  <div class="row g-3 mb-24">
+    <div class="col-lg-8">
+    <div class="card dash-hero-main">
+      <div class="card-title" style="margin-bottom:2px;">Resumen general</div>
+      <div class="dash-hero-number" id="cntTotal">—</div>
+      <div style="color:var(--text-muted);font-size:.82rem;margin-bottom:18px;">incidencias registradas en el sistema</div>
+      <div class="dash-hero-mini">
+        <div class="dash-mini"><span class="dash-mini-dot" style="background:var(--coral);"></span>Pendientes <b id="cntAbiertas">—</b><small id="pctAbiertas"></small></div>
+        <div class="dash-mini"><span class="dash-mini-dot" style="background:var(--amber);"></span>En proceso <b id="cntEnProceso">—</b><small id="pctEnProceso"></small></div>
+        <div class="dash-mini"><span class="dash-mini-dot" style="background:var(--green);"></span>Resueltas <b id="cntResueltas">—</b><small id="pctResueltas"></small></div>
+      </div>
+    </div>
+    </div>
+    <div class="col-lg-4">
+    <div class="card dash-hero-side">
+      <div class="card-title" id="accesosRolTitulo" style="margin-bottom:12px;"></div>
+      <div id="accesosRol" class="dash-acciones"></div>
+    </div>
+    </div>
+  </div>
+
+  <!-- Métricas secundarias — grid real de Bootstrap (row/col) -->
+  <div class="row g-3 mb-24">
+    <div class="col-6"><div class="stat-card stat-coral"><div class="stat-label">Rechazadas</div><div class="stat-value" id="cntRechazadas">—</div><div class="stat-footer" id="pctRechazadas">— % del total</div></div></div>
+    <div class="col-6"><div class="stat-card stat-amber"><div class="stat-label">Reabiertas</div><div class="stat-value" id="cntReabiertas">—</div><div class="stat-footer" id="pctReabiertas">— % del total</div></div></div>
+  </div>
+
+  <!-- Mapa + Actividad reciente -->
+  <div class="grid-map mb-24">
+    <div class="card" style="padding:0;">
+      <div class="card-header" style="padding:14px 18px;margin:0;">
+        <span class="card-title">🗺 Mapa de incidencias</span>
+        <span style="font-size:.75rem;color:var(--text-muted);">Vista geográfica</span>
+      </div>
+      <div class="map-leyenda" id="mapaLeyenda"></div>
+      <div id="mapa" class="map-container map-skeleton" aria-label="Mapa de incidencias" style="height:380px;border-radius:0 0 var(--radius) var(--radius);border:none;"></div>
+    </div>
+
+    <div class="card" style="padding:0;">
+      <div class="card-header" style="padding:14px 18px;margin:0;">
+        <span class="card-title">⟳ Actividad reciente</span>
+        <a href="incidencias.html" class="btn btn-ghost btn-sm">Ver todas →</a>
+      </div>
+      <div id="tbodyUltimas" class="dash-feed">
+        <div style="text-align:center;color:var(--text-muted);padding:40px 0;font-size:.85rem;"><span class="spin">⟳</span> Cargando…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Por categoría -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">◈ Por categoría</span>
+    </div>
+    <div id="porCategoria">
+      <div style="text-align:center;color:var(--text-muted);padding:40px 0;font-size:.85rem;">
+        <span class="spin" style="display:inline-block;">⟳</span> Cargando…
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="js/auth-guard.js?v=20260731-2"></script>
+<script src="js/map-loader.min.js?v=20260731-3"></script>
+<script src="js/sidebar.js?v=20260731-2"></script>
+<script>
+exigirSesion();
+inyectarSidebar('index');
+inicializarBarraUsuario();
+
+// ── Dashboard según el rol del usuario ──
+const ROL_NOMBRE_DASH = {admin:'Administrador',usuario:'Ciudadano',policia:'Policía',bomberos:'Bomberos',salud:'Salud / Emergencias',electrica:'Empresa Eléctrica',agua:'Agua Potable',obras_publicas:'Obras Públicas',medio_ambiente:'Medio Ambiente',supervisor:'Supervisor',tecnico:'Técnico general'};
+
+function iniciarDashboardPorRol() {
+  const u = getUsuario();
+  const rol = u?.rol || 'usuario';
+  const subtitulo = document.getElementById('dashSubtitulo');
+  const titulo = document.getElementById('accesosRolTitulo');
+  const cont = document.getElementById('accesosRol');
+
+  const boton = (href, icono, texto, primario=false) =>
+    `<a href="${href}" class="dash-accion ${primario ? 'dash-accion-primaria' : ''}"><span class="dash-accion-icon">${icono}</span> ${texto}</a>`;
+
+  let botones = '';
+  if (rol === 'admin') {
+    subtitulo.textContent = 'Panel general del sistema — control total de incidencias y usuarios';
+    titulo.textContent = '👑 Accesos de administrador';
+    botones = boton('usuarios.html','👥','Gestionar usuarios',true) + boton('admin.html','🛡','Aprobaciones') + boton('supervisor.html','🧭','Panel Supervisor') + boton('reportes.html','📊','Reportes');
+  } else if (rol === 'supervisor') {
+    subtitulo.textContent = 'Supervisa, ubica y da seguimiento a las incidencias registradas';
+    titulo.textContent = '🧭 Accesos de supervisor';
+    botones = boton('supervisor.html','🧭','Ir al Panel de Supervisor',true) + boton('incidencias.html','📋','Ver todas las incidencias') + boton('reportes.html','📊','Reportes');
+  } else if (['policia','bomberos','salud','electrica','agua','obras_publicas','medio_ambiente'].includes(rol)) {
+    subtitulo.textContent = 'Incidencias asignadas a tu institución';
+    titulo.textContent = '⌂ Accesos institucionales';
+    botones = boton('institucion.html','⌂','Panel institucional',true) + boton('incidencias.html','📋','Ver incidencias');
+  } else {
+    subtitulo.textContent = 'Registra y sigue el estado de tus incidencias';
+    titulo.textContent = '👤 Tus accesos rápidos';
+    botones = boton('registrar.html','+','Registrar incidencia',true) + boton('historial.html','🕘','Mi historial') + boton('mis-apoyos.html','🤝','Mis apoyos');
+  }
+  cont.innerHTML = botones;
+}
+iniciarDashboardPorRol();
+
+const COLOR_ESTADO = {
+  'Registrada':      { bg:'rgba(225,29,72,.12)',  color:'#E11D48', icono:'●' },
+  'Asignada':        { bg:'rgba(217,119,6,.12)',  color:'#D97706', icono:'➤' },
+  'En proceso':      { bg:'rgba(217,119,6,.12)',  color:'#D97706', icono:'⋯' },
+  'Resuelta':        { bg:'rgba(22,163,74,.12)',  color:'#16A34A', icono:'✓' },
+  'En verificación': { bg:'rgba(14,165,233,.12)', color:'#0EA5E9', icono:'🔍' },
+  'Cerrada':         { bg:'rgba(100,116,139,.12)',color:'#64748B', icono:'■' },
+  'Reabierta':       { bg:'rgba(249,115,22,.12)', color:'#F97316', icono:'↺' },
+  'Rechazada':       { bg:'rgba(190,18,60,.12)',  color:'#BE123C', icono:'✕' },
+};
+const COLOR_PRIO = {
+  'Crítica': '#BE123C', 'Alta': '#E11D48', 'Media': '#D97706', 'Baja': '#16A34A'
+};
+
+function badgeEstado(e) {
+  const c = COLOR_ESTADO[e] || { bg:'rgba(100,116,139,.10)', color:'#64748b', icono:'●' };
+  return `<span class="badge" title="${e}" style="background:${c.bg};color:${c.color};border:1px solid ${c.color}30;">${c.icono} ${e}</span>`;
+}
+function badgePrio(p) {
+  const c = COLOR_PRIO[p] || '#94a3b8';
+  return `<span class="badge" style="background:${c}15;color:${c};border:1px solid ${c}30;">${p}</span>`;
+}
+
+// Mapa
+let mapa;
+async function iniciarMapa() {
+  await cargarLeaflet();
+  document.getElementById('mapa').classList.remove('map-skeleton');
+  mapa = L.map('mapa', { zoomControl: true }).setView([-2.9001, -79.0059], 13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO', maxZoom: 19
+  }).addTo(mapa);
+}
+
+async function cargarResumen() {
+  try {
+    const r = await fetchAPI(`${API}/dashboard/resumen`);
+    const d = await r.json();
+    const t = d.total || 0;
+    document.getElementById('cntTotal').textContent     = t;
+    document.getElementById('cntAbiertas').textContent  = d.pendientes || 0;
+    document.getElementById('cntEnProceso').textContent = d.en_proceso || 0;
+    document.getElementById('cntResueltas').textContent = d.resueltas  || 0;
+    document.getElementById('cntRechazadas').textContent = d.rechazadas || 0;
+    document.getElementById('cntReabiertas').textContent = d.reabiertas || 0;
+    if (t > 0) {
+      document.getElementById('pctAbiertas').textContent   = `${(d.porcentaje_pendientes ?? ((d.pendientes/t)*100).toFixed(1))}% del total`;
+      document.getElementById('pctEnProceso').textContent  = `${(d.porcentaje_en_proceso ?? ((d.en_proceso/t)*100).toFixed(1))}% del total`;
+      document.getElementById('pctResueltas').textContent  = `${(d.porcentaje_resueltas ?? ((d.resueltas/t)*100).toFixed(1))}% del total`;
+      document.getElementById('pctRechazadas').textContent = `${(d.porcentaje_rechazadas ?? 0)}% del total`;
+      document.getElementById('pctReabiertas').textContent = `${(d.porcentaje_reabiertas ?? 0)}% del total`;
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function cargarMarcadores() {
+  try {
+    const r    = await fetchAPI(`${API}/incidencias/mapa`);
+    const datos = await r.json();
+    const puntos = [];
+
+    // Si varias incidencias están casi en el mismo punto (ej. distintas
+    // oficinas del mismo edificio), se dibujan encima unas de otras y solo
+    // se ve la última. Acá las separamos un poquito en círculo para que
+    // todos los colores queden visibles (la ubicación guardada no cambia).
+    const grupos = {};
+    datos.forEach(inc => {
+      const lat0 = parseFloat(inc.latitud), lng0 = parseFloat(inc.longitud);
+      if (!Number.isFinite(lat0) || !Number.isFinite(lng0)) return;
+      inc.__lat = lat0; inc.__lng = lng0;
+      const clave = `${lat0.toFixed(4)},${lng0.toFixed(4)}`;
+      (grupos[clave] ||= []).push(inc);
+    });
+
+    Object.values(grupos).forEach(grupo => {
+      grupo.forEach((inc, i) => {
+        let lat = inc.__lat, lng = inc.__lng;
+        if (grupo.length > 1) {
+          const angulo = (2 * Math.PI * i) / grupo.length;
+          const radio = 0.0006; // ~60 m, solo para separarlos visualmente
+          lat += radio * Math.cos(angulo);
+          lng += radio * Math.sin(angulo);
+        }
+        const c = COLOR_ESTADO[inc.estado] || { color:'#94a3b8' };
+        const ico = L.divIcon({
+          className: '',
+          html: `<div style="width:14px;height:14px;border-radius:50%;background:${c.color};border:2px solid #fff;box-shadow:0 1px 4px rgba(15,23,42,.35);"></div>`,
+          iconSize:[14,14], iconAnchor:[7,7]
+        });
+        L.marker([lat, lng], { icon: ico }).addTo(mapa)
+          .bindPopup(`<strong style="color:#0F172A">${inc.titulo}</strong><br/><small style="color:#64748b">${inc.tipo} · ${inc.zona}</small><br/><span style="color:${c.color};font-weight:700;">${(COLOR_ESTADO[inc.estado]||{icono:'●'}).icono} ${inc.estado}</span>`);
+        puntos.push([lat, lng]);
+      });
+    });
+
+    if (puntos.length) mapa.fitBounds(puntos, { padding: [24, 24], maxZoom: 15 });
+  } catch(e) { console.error('Error cargando marcadores del mapa:', e); }
+}
+
+async function cargarPorCategoria() {
+  try {
+    const r     = await fetchAPI(`${API}/dashboard/por-tipo`);
+    const datos  = await r.json();
+    const colores = ['#00D4FF','#FF3B6B','#F59E0B','#00E5A0','#818cf8','#e879f9','#fb923c','#34d399'];
+    const max   = datos.reduce((m,d) => Math.max(m, d.total), 0);
+    const html  = datos.map((d,i) => {
+      const c   = colores[i % colores.length];
+      const pct = max > 0 ? Math.round((d.total/max)*100) : 0;
+      return `
+        <div style="margin-bottom:14px;">
+          <div class="flex justify-between items-center mb-8" style="margin-bottom:6px;">
+            <span style="font-size:.82rem;color:var(--text-secondary);">${d.tipo}</span>
+            <span style="font-family:'Space Mono',monospace;font-size:.8rem;color:${c};font-weight:700;">${d.total}</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:${pct}%;background:${c};"></div>
+          </div>
+        </div>`;
+    }).join('');
+    document.getElementById('porCategoria').innerHTML = html || '<p style="text-align:center;color:var(--text-muted);font-size:.85rem;padding:20px 0;">Sin datos disponibles</p>';
+  } catch(e) {
+    document.getElementById('porCategoria').innerHTML = '<p style="color:var(--coral);text-align:center;padding:20px 0;font-size:.85rem;">Error al cargar categorías</p>';
+  }
+}
+
+async function cargarUltimas() {
+  try {
+    const r    = await fetchAPI(`${API}/dashboard/ultimas`);
+    const datos = await r.json();
+    const html  = datos.map(inc => `
+      <div class="dash-feed-item">
+        <div class="dash-feed-dot" style="background:${(COLOR_ESTADO[inc.estado]||{color:'#94a3b8'}).color};"></div>
+        <div class="dash-feed-body">
+          <div class="dash-feed-title">${inc.titulo}</div>
+          <div class="dash-feed-meta">${inc.tipo} · ${inc.zona} · <span class="mono">${new Date(inc.fecha_ocurrencia).toLocaleDateString('es-EC')}</span></div>
+        </div>
+        <div class="dash-feed-badges">${badgePrio(inc.prioridad)}${badgeEstado(inc.estado)}</div>
+      </div>`).join('');
+    document.getElementById('tbodyUltimas').innerHTML = html || `<div style="text-align:center;padding:40px;color:var(--text-muted);">Sin incidencias recientes</div>`;
+  } catch(e) {
+    document.getElementById('tbodyUltimas').innerHTML = `<div style="text-align:center;padding:40px;color:var(--coral);">Error al cargar datos</div>`;
+  }
+}
+
+alEntrarEnVista(document.getElementById('mapa'), async () => {
+  await iniciarMapa();
+  document.getElementById('mapaLeyenda').innerHTML = Object.entries(COLOR_ESTADO)
+    .map(([nombre, c]) => `<span class="map-leyenda-item"><i style="background:${c.color};"></i>${nombre}</span>`).join('');
+  cargarMarcadores();
+});
+cargarResumen();
+cargarPorCategoria();
+cargarUltimas();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# Reemplazá "tudominio.com" por tu dominio real (el mismo que apunta a la IP de este servidor).
+# Caddy obtiene y renueva el certificado HTTPS solo, sin configuración adicional,
+# siempre que el DNS ya apunte acá y los puertos 80/443 estén abiertos.
+
+tudominio.com {
+    reverse_proxy frontend:80
+}

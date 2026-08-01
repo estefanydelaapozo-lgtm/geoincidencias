@@ -1,0 +1,10 @@
+1. Abra Docker Desktop y espere a que indique que Docker está ejecutándose.
+2. Haga doble clic en LEVANTAR_PROYECTO.bat.
+3. Abra http://localhost:8080/login.html
+
+Comandos manuales equivalentes:
+
+docker compose down --remove-orphans
+docker compose build --no-cache backend
+docker compose up -d --force-recreate
+docker compose ps

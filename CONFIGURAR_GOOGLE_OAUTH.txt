@@ -1,0 +1,17 @@
+CONFIGURAR GOOGLE OAUTH2 EN GEOINCIDENCIAS
+
+1. En Google Cloud Console crea o selecciona un proyecto.
+2. Configura la pantalla de consentimiento OAuth.
+3. Crea una credencial: ID de cliente OAuth 2.0, tipo Aplicación web.
+4. En Orígenes JavaScript autorizados agrega:
+   http://localhost:8080
+   y, cuando publiques el sistema, tu dominio HTTPS real.
+5. Copia el Client ID.
+6. En el archivo .env ubicado junto a docker-compose.yml agrega:
+   GOOGLE_CLIENT_ID=TU_CLIENT_ID.apps.googleusercontent.com
+7. Reconstruye y levanta:
+   docker compose down
+   docker compose up -d --build
+
+El backend valida el ID token directamente contra Google y luego entrega un token Laravel Sanctum.
+Nunca publiques el Client Secret; esta integración no lo necesita en el navegador.

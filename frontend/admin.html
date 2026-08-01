@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GeoIncidencias — Administración</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.css?v=1">
+  <link rel="stylesheet" href="styles.min.css?v=20260731-6"/>
+</head>
+<body class="admin-page">
+
+<div id="sidebarContainer"></div>
+
+<!-- Modal eliminar incidencia -->
+<div class="modal-backdrop" id="modalEliminarInc">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-head">
+      <h3 style="color:var(--coral);">⚠ Eliminar incidencia</h3>
+      <button class="btn-close-modal" onclick="cerrarModal('modalEliminarInc')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-secondary);font-size:.9rem;">Esta acción no se puede deshacer. Solo es posible dentro de las primeras 24 horas desde el registro. ¿Confirmas la eliminación?</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModal('modalEliminarInc')">Cancelar</button>
+      <button class="btn btn-coral btn-sm" onclick="eliminarIncidenciaConfirm()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle de incidencia (ubicación, cómo llegar, historial) -->
+<div class="modal-backdrop" id="modalDetalleInc">
+  <div class="modal-box" style="max-width:720px;">
+    <div class="modal-head">
+      <h3>📍 Detalle de la incidencia</h3>
+      <button class="btn-close-modal" onclick="cerrarModal('modalDetalleInc')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2" style="gap:16px;">
+        <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div id="det_titulo" style="font-weight:700;font-size:1.05rem;color:var(--text-primary);"></div>
+            <div id="det_meta" style="font-size:.78rem;color:var(--text-muted);margin-top:2px;"></div>
+          </div>
+          <span id="det_badgeAprobacion"></span>
+        </div>
+        <div id="det_descripcion" style="grid-column:1/-1;font-size:.85rem;color:var(--text-secondary);"></div>
+        <div>
+          <label class="form-label">📷 Fotografía</label>
+          <div id="det_fotoWrap" style="border:1px solid var(--border-light);border-radius:10px;overflow:hidden;height:200px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.02);">
+            <span id="det_sinFoto" style="color:var(--text-muted);font-size:.8rem;">Sin foto adjunta</span>
+            <img id="det_foto" alt="Foto de la incidencia" style="display:none;width:100%;height:100%;object-fit:cover;cursor:zoom-in;"/>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">🗺 Ubicación exacta <span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">(haz clic en el mapa para corregirla)</span></label>
+          <div id="mapaDetalleInc" class="map-container" style="height:220px;"></div>
+          <input type="text" id="det_direccion" class="form-control" maxlength="255" placeholder="Dirección o referencia del lugar" style="margin-top:8px;"/>
+          <div id="det_coords" style="margin-top:2px;font-size:.75rem;color:var(--text-muted);font-family:'Space Mono',monospace;"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <a id="det_comoLlegar" href="#" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="display:none;">📍 Cómo llegar</a>
+            <button type="button" class="btn btn-primary btn-sm" onclick="guardarUbicacionInc()">💾 Guardar ubicación</button>
+          </div>
+        </div>
+        <div style="grid-column:1/-1;border-top:1px solid var(--border-light);padding-top:14px;">
+          <label class="form-label">Plazo e historial de aprobación</label>
+          <div id="det_plazoAviso" style="font-size:.75rem;color:var(--text-muted);margin-bottom:8px;"></div>
+          <div id="det_historialAprobacion" style="display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--text-secondary);margin-bottom:10px;"></div>
+          <div id="det_acciones" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModal('modalDetalleInc')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal rechazar incidencia -->
+<div class="modal-backdrop" id="modalRechazarInc">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-head">
+      <h3 style="color:var(--coral);">✕ Rechazar incidencia</h3>
+      <button class="btn-close-modal" onclick="cerrarModal('modalRechazarInc')">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Motivo del rechazo</label>
+      <textarea id="motivoRechazarInc" class="form-control" rows="3" placeholder="Describe el motivo…" style="resize:vertical;"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModal('modalRechazarInc')">Cancelar</button>
+      <button class="btn btn-coral btn-sm" onclick="rechazarIncidenciaConfirm()">Rechazar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal rechazar apoyo -->
+<div class="modal-backdrop" id="modalRechazarApoyo">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-head">
+      <h3 style="color:var(--coral);">✕ Rechazar apoyo</h3>
+      <button class="btn-close-modal" onclick="cerrarModal('modalRechazarApoyo')">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Motivo del rechazo</label>
+      <textarea id="motivoRechazarApoyo" class="form-control" rows="3" style="resize:vertical;"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModal('modalRechazarApoyo')">Cancelar</button>
+      <button class="btn btn-coral btn-sm" onclick="rechazarApoyoConfirm()">Rechazar</button>
+    </div>
+  </div>
+</div>
+
+<main class="main-content">
+  <div class="admin-security-ribbon">🛡 Panel exclusivo de administración · Acciones protegidas y auditadas</div>
+  <div class="page-header">
+    <div>
+      <div class="page-title">Panel de administración</div>
+      <div class="page-subtitle">Vista ejecutiva del sistema — control global de incidencias y usuarios</div>
+    </div>
+  </div>
+
+  <!-- Resumen ejecutivo -->
+  <div class="exec-strip mb-24" id="execStrip">
+    <div class="exec-card">
+      <span class="exec-icon">◈</span>
+      <div><div class="exec-value" id="ex_total">—</div><div class="exec-label">Incidencias totales</div></div>
+    </div>
+    <div class="exec-card">
+      <span class="exec-icon">⏳</span>
+      <div><div class="exec-value" id="ex_pendientes">—</div><div class="exec-label">Por aprobar</div></div>
+    </div>
+    <div class="exec-card">
+      <span class="exec-icon">✓</span>
+      <div><div class="exec-value" id="ex_tasa">—</div><div class="exec-label">Tasa de resolución</div></div>
+    </div>
+    <div class="exec-card">
+      <span class="exec-icon">◉</span>
+      <div><div class="exec-value" id="ex_usuarios">—</div><div class="exec-label">Usuarios activos</div></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:24px;">
+    <button class="btn btn-primary" id="tabIncBtn" onclick="cambiarTab('incidencias')">
+      ◈ Incidencias pendientes <span id="cntPendIncidencias" style="background:rgba(0,0,0,.3);padding:2px 7px;border-radius:20px;margin-left:4px;">0</span>
+    </button>
+    <button class="btn btn-ghost" id="tabApBtn" onclick="cambiarTab('apoyos')">
+      ◎ Apoyos pendientes <span id="cntPendApoyos" style="background:rgba(0,0,0,.3);padding:2px 7px;border-radius:20px;margin-left:4px;">0</span>
+    </button>
+  </div>
+
+  <!-- Panel incidencias -->
+  <div id="panelIncidencias">
+    <div class="card" style="padding:0;">
+      <div class="card-header" style="padding:14px 18px;margin:0;">
+        <span class="card-title">◈ Incidencias pendientes de aprobación</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="gi-table">
+          <thead>
+            <tr>
+              <th>Incidencia</th><th>Tipo / Subtipo</th><th>Zona</th><th>Prioridad</th><th>Reportante</th><th>Fecha</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPendInc">
+            <tr><td colspan="7" style="text-align:center;padding:50px;color:var(--text-muted);"><span class="spin">⟳</span> Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel apoyos -->
+  <div id="panelApoyos" style="display:none;">
+    <div class="card" style="padding:0;">
+      <div class="card-header" style="padding:14px 18px;margin:0;">
+        <span class="card-title">◎ Apoyos pendientes de aprobación</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="gi-table">
+          <thead>
+            <tr><th>Incidencia</th><th>Usuario</th><th>Prioridad</th><th>Monto</th><th>Fecha apoyo</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="tbodyPendApoyos">
+            <tr><td colspan="6" style="text-align:center;padding:50px;color:var(--text-muted);"><span class="spin">⟳</span> Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:right;margin-top:8px;font-size:.65rem;color:var(--text-muted);opacity:.5;">build 2026-07-30-f</div>
+</main>
+
+<script src="js/auth-guard.js?v=20260731-2"></script>
+<script src="js/map-loader.min.js?v=20260731-3"></script>
+<script src="js/sidebar.js?v=20260731-2"></script>
+<script src="js/admin.js?v=20260731-3"></script>
+<script>
+exigirAdmin();
+inyectarSidebar('admin');
+inicializarBarraUsuario();
+</script>
+</body>
+</html>

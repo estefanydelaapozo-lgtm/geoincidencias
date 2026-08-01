@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GeoIncidencias — Reportes</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.css?v=1">
+  <link rel="stylesheet" href="styles.min.css?v=20260731-6"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div id="sidebarContainer"></div>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Reportes</div>
+      <div class="page-subtitle">Análisis y estadísticas de incidencias</div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-24" style="padding:16px 20px;">
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;">
+      <div>
+        <label class="form-label">Período rápido</label>
+        <select id="periodoRapido" class="form-select" onchange="aplicarPeriodoRapido()" style="width:160px;">
+          <option value="">— Personalizado —</option>
+          <option value="7">Últimos 7 días</option>
+          <option value="30">Últimos 30 días</option>
+          <option value="90">Últimos 90 días</option>
+          <option value="365">Último año</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Desde</label>
+        <input type="date" id="rDesde" class="form-control" style="width:160px;"/>
+      </div>
+      <div>
+        <label class="form-label">Hasta</label>
+        <input type="date" id="rHasta" class="form-control" style="width:160px;"/>
+      </div>
+      <div>
+        <label class="form-label">Tipo</label>
+        <select id="rTipo" class="form-select" style="width:160px;"><option value="">Todos</option></select>
+      </div>
+      <div>
+        <label class="form-label">Zona</label>
+        <select id="rZona" class="form-select" style="width:160px;"><option value="">Todas</option></select>
+      </div>
+      <div><label class="form-label">Prioridad</label><select id="rPrioridad" class="form-select" style="width:150px"><option value="">Todas</option><option>Baja</option><option>Media</option><option>Alta</option><option>Crítica</option></select></div>
+      <button class="btn btn-primary" onclick="cargarReportes()">▣ Aplicar filtros</button>
+      <button class="btn btn-ghost" onclick="exportarExcel()">⇩ Excel</button>
+      <button class="btn btn-ghost" onclick="exportarPDF()">⇩ PDF</button>
+      <button class="btn btn-ghost" onclick="limpiarFiltros()">↺ Limpiar</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="stat-grid mb-24">
+    <div class="stat-card stat-cyan">
+      <div class="stat-label">Total incidencias</div>
+      <div class="stat-value" id="r_total">—</div>
+      <div class="stat-footer" id="r_periodo">En el período seleccionado</div>
+    </div>
+    <div class="stat-card stat-coral">
+      <div class="stat-label">Tiempo promedio resolución</div>
+      <div class="stat-value" id="r_tiempo_prom">—</div>
+      <div class="stat-footer">días promedio</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-label">Tasa de resolución</div>
+      <div class="stat-value" id="r_tasa">—</div>
+      <div class="stat-footer">del total del período</div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-label">Prioridad más frecuente</div>
+      <div class="stat-value" style="font-size:1.4rem;" id="r_prio_frec">—</div>
+      <div class="stat-footer">Tipo predominante</div>
+    </div>
+  </div>
+
+  <!-- Gráficas 2x2 -->
+  <div class="grid-2 mb-24" style="gap:20px;">
+    <div class="card">
+      <div class="card-header"><span class="card-title">◉ Por estado</span></div>
+      <canvas id="chartEstado" height="220"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">◈ Por categoría</span></div>
+      <canvas id="chartCategoria" height="220"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">▲ Por prioridad</span></div>
+      <canvas id="chartPrioridad" height="220"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">⟶ Tendencia temporal</span></div>
+      <canvas id="chartTendencia" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Por responsable -->
+  <div class="card" style="padding:0;">
+    <div class="card-header" style="padding:14px 18px;margin:0;">
+      <span class="card-title">⊙ Rendimiento por responsable</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="gi-table">
+        <thead>
+          <tr>
+            <th>Responsable</th>
+            <th>Asignadas</th>
+            <th>Resueltas</th>
+            <th>En proceso</th>
+            <th>Tasa resolución</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyResponsables">
+          <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">Aplica filtros para ver datos</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script defer src="js/auth-guard.js?v=20260731-2"></script>
+<script defer src="js/sidebar.js?v=20260731-2"></script>
+<script defer src="js/reportes.js?v=20260731-2"></script>
+
+</body>
+</html>

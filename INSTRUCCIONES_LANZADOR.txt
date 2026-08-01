@@ -1,0 +1,19 @@
+GEOINCIDENCIAS - INICIO AUTOMATICO
+
+1. Abre Docker Desktop.
+2. Ejecuta LEVANTAR_TODO_GEOINCIDENCIAS.bat como usuario normal.
+3. Espera a que abra http://localhost:8080/login.html.
+
+El lanzador construye las imagenes, levanta los contenedores, crea los logs, limpia cache y ejecuta migraciones.
+No elimina el volumen de almacenamiento y no ejecuta pruebas automaticamente para proteger la base Aiven.
+
+Nota: el servicio "caddy" (puertos 80/443, para HTTPS con dominio real) ya NO se levanta en local
+para evitar el error "port is already allocated" si algo mas en tu PC usa el puerto 80.
+Solo se necesita en el servidor de produccion. Para incluirlo ahi:
+  docker compose --profile prod up -d
+
+Comando de pruebas (manual y con precaucion):
+docker compose exec backend php artisan test
+
+Ver log de seguridad:
+VER_LOG_SEGURIDAD.bat

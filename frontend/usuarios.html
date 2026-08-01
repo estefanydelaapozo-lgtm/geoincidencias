@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GeoIncidencias — Usuarios</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.css?v=1">
+  <link rel="stylesheet" href="styles.min.css?v=20260731-6"/>
+</head>
+<body>
+
+<div id="sidebarContainer"></div>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Gestión de usuarios</div>
+      <div class="page-subtitle">CRUD administrativo para crear, consultar, editar y desactivar usuarios</div>
+    </div>
+    <div class="flex gap-8" style="flex-wrap:wrap;">
+      <button class="btn btn-ghost" onclick="crearSupervisorDemo()" title="Crea o resetea la cuenta de supervisor de prueba (supervisor@geoincidencias.com)">
+        🧭 Supervisor de prueba
+      </button>
+      <button class="btn btn-ghost" onclick="crearTecnicoDemo()" title="Crea o resetea la cuenta de técnico de prueba (tecnico@geoincidencias.com)">
+        🔧 Técnico de prueba
+      </button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" id="tituloFormUsuario" style="color:var(--cyan);">Crear usuario</span>
+      </div>
+      <form id="formUsuario">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Nombre *</label>
+          <input id="uNombre" class="form-control" maxlength="100" required/>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Apellido</label>
+          <input id="uApellido" class="form-control" maxlength="100"/>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Correo *</label>
+          <input id="uCorreo" type="email" class="form-control" maxlength="150" required/>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Teléfono</label>
+          <input id="uTelefono" class="form-control" maxlength="20" placeholder="0999000000"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div class="form-group">
+            <label class="form-label">Rol</label>
+            <select id="uRol" class="form-control">
+              <option value="usuario">Ciudadano</option>
+              <option value="admin">Administrador</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="tecnico">Técnico general</option>
+              <option value="policia">Policía</option>
+              <option value="bomberos">Bomberos</option>
+              <option value="salud">Salud / Emergencias</option>
+              <option value="electrica">Empresa Eléctrica</option>
+              <option value="agua">Agua Potable</option>
+              <option value="obras_publicas">Obras Públicas</option>
+              <option value="medio_ambiente">Medio Ambiente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <label style="height:42px;display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:0 12px;color:var(--text-secondary);font-size:.85rem;">
+              <input id="uActivo" type="checkbox" checked/> Activo
+            </label>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:18px;">
+          <label class="form-label">Contraseña</label>
+          <input id="uPassword" type="password" class="form-control" placeholder="Mínimo 6 caracteres"/>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button id="btnGuardarUsuario" class="btn btn-primary" type="submit" style="flex:1;justify-content:center;">
+            ✓ <span id="textoBtnGuardarUsuario">Crear usuario</span>
+          </button>
+          <button id="btnCancelarEdicionUsuario" class="btn btn-ghost" type="button" onclick="limpiarFormularioUsuario()" style="display:none;">Cancelar</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" style="padding:0;">
+      <div class="card-header" style="padding:16px 18px;margin:0;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <span class="card-title">Usuarios registrados</span>
+        <span id="totalUsuarios" style="font-size:.8rem;color:var(--text-muted);">0 usuarios</span>
+      </div>
+      <div class="quick-filters mb-16" id="quickFiltersUsuarios" style="padding:0 18px;">
+        <button class="qf-chip active" onclick="filtrarRolRapido('', this)">Todos</button>
+        <button class="qf-chip" onclick="filtrarRolRapido('usuario', this)">👤 Ciudadanos</button>
+        <button class="qf-chip" onclick="filtrarRolRapido('supervisor', this)">🧭 Supervisores</button>
+        <button class="qf-chip" onclick="filtrarRolRapido('tecnico', this)">🔧 Técnicos</button>
+        <button class="qf-chip" onclick="filtrarRolRapido('admin', this)">👑 Administradores</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 160px 150px;gap:10px;padding:0 18px 16px;">
+        <input id="buscarUsuario" class="form-control" placeholder="Buscar por nombre, correo o teléfono…"/>
+        <select id="filtroRolUsuario" class="form-control">
+          <option value="">Todos los roles</option>
+          <option value="admin">Administrador</option>
+          <option value="usuario">Ciudadano</option>
+          <option value="tecnico">Técnico general</option>
+          <option value="policia">Policía</option>
+          <option value="bomberos">Bomberos</option>
+          <option value="salud">Salud / Emergencias</option>
+          <option value="electrica">Empresa Eléctrica</option>
+          <option value="agua">Agua Potable</option>
+          <option value="obras_publicas">Obras Públicas</option>
+          <option value="medio_ambiente">Medio Ambiente</option>
+          <option value="supervisor">Supervisor</option>
+        </select>
+        <select id="filtroEstadoUsuario" class="form-control">
+          <option value="">Todos</option>
+          <option value="1">Activos</option>
+          <option value="0">Inactivos</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Creado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyUsuarios"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="js/auth-guard.js?v=20260731-2"></script>
+<script src="js/sidebar.js?v=20260731-2"></script>
+<script>
+  exigirAdmin();
+  inyectarSidebar('usuarios');
+  inicializarBarraUsuario();
+</script>
+<script src="js/usuarios.min.js?v=20260731-3"></script>
+</body>
+</html>

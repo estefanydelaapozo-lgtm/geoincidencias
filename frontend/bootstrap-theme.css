@@ -1,0 +1,36 @@
+/* bootstrap-theme.css
+   Personaliza Bootstrap usando su PROPIO sistema de variables CSS
+   (la forma correcta de "temizar" Bootstrap 5, sin pelearlo).
+   Se carga DESPUÉS de bootstrap.min.css y ANTES de styles.css. */
+
+:root,
+[data-bs-theme="light"] {
+  --bs-primary: #6D28D9;
+  --bs-primary-rgb: 109, 40, 217;
+  --bs-secondary: #8B5CF6;
+  --bs-secondary-rgb: 139, 92, 246;
+  --bs-success: #16A34A;
+  --bs-success-rgb: 22, 163, 74;
+  --bs-danger: #E11D48;
+  --bs-danger-rgb: 225, 29, 72;
+  --bs-warning: #D97706;
+  --bs-warning-rgb: 217, 119, 6;
+  --bs-info: #0EA5E9;
+  --bs-info-rgb: 14, 165, 233;
+  --bs-link-color: #6D28D9;
+  --bs-link-hover-color: #581fb8;
+  --bs-border-radius: .625rem;
+  --bs-border-radius-sm: .5rem;
+  --bs-border-radius-lg: .875rem;
+  --bs-font-sans-serif: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --bs-body-bg: #F8FAFC;
+  --bs-body-color: #0F172A;
+}
+
+/* Componentes reales de Bootstrap (grid, botones, tarjetas, formularios,
+   badges) ahora toman estos colores directamente del motor de Bootstrap. */
+.btn-primary { --bs-btn-bg: var(--bs-primary); --bs-btn-border-color: var(--bs-primary); --bs-btn-hover-bg: var(--bs-secondary); --bs-btn-hover-border-color: var(--bs-secondary); }
+.btn-outline-primary { --bs-btn-color: var(--bs-primary); --bs-btn-border-color: var(--bs-primary); --bs-btn-hover-bg: var(--bs-primary); }
+.form-control:focus, .form-select:focus { border-color: var(--bs-primary); box-shadow: 0 0 0 .25rem rgba(109,40,217,.15); }
+.badge.bg-primary { background-color: var(--bs-primary) !important; }
+.card { border-radius: var(--bs-border-radius-lg); }

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GeoIncidencias — Incidencias</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cartocdn.com" crossorigin>
+  <link rel="dns-prefetch" href="//unpkg.com">
+  <link rel="dns-prefetch" href="//cartocdn.com">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.css?v=1">
+  <link rel="stylesheet" href="styles.min.css?v=20260731-6"/>
+</head>
+<body>
+
+<div id="sidebarContainer"></div>
+<div id="toastContainer"></div>
+
+<!-- Modal editar -->
+<div class="modal-backdrop" id="modalDetalle">
+  <div class="modal-box" style="max-width:720px;">
+    <div class="modal-head">
+      <h3>📍 Detalle de Incidencia</h3>
+      <button class="btn-close-modal" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit_id"/>
+      <div class="grid-2" style="gap:16px;margin-bottom:16px;">
+        <div style="grid-column:1/-1;">
+          <label class="form-label">Título</label>
+          <input type="text" id="edit_titulo" class="form-control"/>
+        </div>
+        <div>
+          <label class="form-label">Tipo</label>
+          <select id="edit_id_tipo" class="form-select"></select>
+        </div>
+        <div>
+          <label class="form-label">Prioridad</label>
+          <select id="edit_prioridad" class="form-select">
+            <option value="Baja">Baja</option>
+            <option value="Media">Media</option>
+            <option value="Alta">Alta</option>
+            <option value="Crítica">Crítica</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Estado</label>
+          <select id="edit_id_estado" class="form-select"></select>
+        </div>
+        <div>
+          <label class="form-label">Zona</label>
+          <select id="edit_id_zona" class="form-select"></select>
+        </div>
+        <div>
+          <label class="form-label">Fecha de ocurrencia</label>
+          <input type="date" id="edit_fecha_ocurrencia" class="form-control"/>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="form-label">Descripción</label>
+          <textarea id="edit_descripcion" class="form-control" rows="3" style="resize:vertical;"></textarea>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="form-label">Ubicación en el mapa</label>
+          <div id="mapaEditar" class="map-container" style="height:220px;"></div>
+          <div class="grid-2" style="gap:10px;margin-top:10px;">
+            <div><label class="form-label">Latitud</label><input type="text" id="edit_latitud" class="form-control"/></div>
+            <div><label class="form-label">Longitud</label><input type="text" id="edit_longitud" class="form-control"/></div>
+          </div>
+          <div style="margin-top:10px;">
+            <label class="form-label">Dirección o referencia</label>
+            <input type="text" id="edit_direccion_texto" class="form-control" maxlength="255" placeholder="Ej: Av. Principal y calle 10, frente al parque"/>
+          </div>
+          <div style="margin-top:10px;">
+            <a id="edit_comoLlegar" href="#" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="display:none;">📍 Cómo llegar</a>
+          </div>
+        </div>
+        <div style="grid-column:1/-1;border-top:1px solid var(--border-light);padding-top:14px;">
+          <label class="form-label">Estado de aprobación</label>
+          <div id="edit_badgeAprobacion" style="margin-bottom:8px;"></div>
+          <div id="edit_historialAprobacion" style="display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--text-secondary);"></div>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="form-label">Comentario (al guardar cambios)</label>
+          <textarea id="edit_comentario" class="form-control" rows="2" placeholder="Opcional: describe el motivo del cambio…" style="resize:vertical;"></textarea>
+        </div>
+        <div style="grid-column:1/-1;border-top:1px solid var(--border-light);padding-top:14px;">
+          <label class="form-label">Seguimiento y comentarios</label>
+          <div id="listaComentarios" style="display:flex;flex-direction:column;gap:8px;max-height:180px;overflow:auto;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;">
+            <input id="nuevoComentario" class="form-control" maxlength="1000" placeholder="Escribe un comentario de seguimiento…"/>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="agregarComentario()">Agregar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" id="btnGuardarEdit" onclick="guardarEdicion()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal asignar responsable -->
+<div class="modal-backdrop" id="modalAsignar">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-head">
+      <h3>👤 Asignar responsable</h3>
+      <button class="btn-close-modal" onclick="cerrarModalAsignar()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="asignar_id"/>
+      <div id="asignar_actuales" style="margin-bottom:12px;font-size:.8rem;color:var(--text-secondary);"></div>
+      <label class="form-label">Persona responsable</label>
+      <select id="asignar_id_usuario" class="form-select"></select>
+      <p style="font-size:.75rem;color:var(--text-muted);margin-top:8px;">
+        Esta persona podrá cambiar el estado de la incidencia hasta marcarla como resuelta, y aparecerá en el reporte "Rendimiento por responsable".
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModalAsignar()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" id="btnGuardarAsignar" onclick="guardarAsignacion()">Asignar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal actualizar / finalizar estado -->
+<div class="modal-backdrop" id="modalEstado">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-head">
+      <h3>▶ Actualizar estado</h3>
+      <button class="btn-close-modal" onclick="cerrarModalEstado()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="estado_id"/>
+      <p id="estado_actual_label" style="font-size:.82rem;color:var(--text-secondary);margin-bottom:12px;"></p>
+      <label class="form-label">Nuevo estado</label>
+      <select id="estado_nuevo" class="form-select"></select>
+      <div style="margin-top:12px;">
+        <label class="form-label">Comentario</label>
+        <textarea id="estado_comentario" class="form-control" rows="2" placeholder="Ej: Trabajo finalizado en sitio…" style="resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModalEstado()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" id="btnGuardarEstado" onclick="guardarCambioEstado()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmar eliminar -->
+<div class="modal-backdrop" id="modalEliminar">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-head">
+      <h3 style="color:var(--coral);">⚠ Eliminar incidencia</h3>
+      <button class="btn-close-modal" onclick="cerrarModalEliminar()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-secondary);font-size:.9rem;">Esta acción no se puede deshacer. ¿Confirmas la eliminación?</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModalEliminar()">Cancelar</button>
+      <button class="btn btn-coral btn-sm" id="btnConfEliminar" onclick="confirmarEliminar()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Incidencias</div>
+      <div class="page-subtitle">Gestiona y filtra todas las incidencias del sistema</div>
+    </div>
+    <a href="registrar.html" class="btn btn-primary"><span>+</span> Registrar</a>
+  </div>
+
+  <!-- Filtros rápidos -->
+  <div class="quick-filters mb-16" id="quickFilters">
+    <button class="qf-chip active" onclick="filtrarRapido('', this)">Todas</button>
+    <button class="qf-chip" onclick="filtrarRapido('Registrada', this)">⏳ Pendientes</button>
+    <button class="qf-chip" onclick="filtrarRapido('En proceso', this)">⋯ En proceso</button>
+    <button class="qf-chip" onclick="filtrarRapido('Resuelta', this)">✓ Resueltas</button>
+    <button class="qf-chip" onclick="filtrarRapido('Cerrada', this)">■ Cerradas</button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-24" style="padding:16px 20px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;flex-wrap:wrap;">
+      <div>
+        <label class="form-label">Buscar</label>
+        <input type="text" id="buscar" class="form-control" placeholder="Título o descripción…" oninput="debounce(()=>cargarIncidencias(1),400)()"/>
+      </div>
+      <div>
+        <label class="form-label">Tipo</label>
+        <select id="filtroTipo" class="form-select" onchange="cargarIncidencias(1)">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Estado</label>
+        <select id="filtroEstado" class="form-select" onchange="cargarIncidencias(1)">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Prioridad</label>
+        <select id="filtroPrioridad" class="form-select" onchange="cargarIncidencias(1)">
+          <option value="">Todas</option>
+          <option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Zona</label>
+        <select id="filtroZona" class="form-select" onchange="cargarIncidencias(1)">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Desde</label>
+        <input type="date" id="filtroDesde" class="form-control" onchange="cargarIncidencias(1)"/>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="limpiarFiltros()" style="height:40px;align-self:end;">↺ Limpiar</button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card" style="padding:0;">
+    <div class="card-header" style="padding:14px 18px;margin:0;">
+      <span class="card-title">◈ Listado de incidencias</span>
+      <span id="totalLabel" style="font-size:.75rem;color:var(--text-muted);"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="gi-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Incidencia</th>
+            <th>Tipo</th>
+            <th>Zona</th>
+            <th>Prioridad</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Incentivo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyIncidencias">
+          <tr><td colspan="9" style="text-align:center;padding:50px;color:var(--text-muted);"><span class="spin">⟳</span> Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:14px 18px;border-top:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;">
+      <span id="paginaInfo" style="font-size:.78rem;color:var(--text-muted);"></span>
+      <div class="pagination" id="paginacion"></div>
+    </div>
+  </div>
+</main>
+
+<script src="js/auth-guard.js?v=20260731-3"></script>
+<script src="js/map-loader.min.js?v=20260731-3"></script>
+<script src="js/sidebar.js?v=20260731-3"></script>
+<script src="js/incidencias.min.js?v=20260731-4"></script>
+<script>
+exigirSesion();
+inyectarSidebar('incidencias');
+inicializarBarraUsuario();
+</script>
+</body>
+</html>

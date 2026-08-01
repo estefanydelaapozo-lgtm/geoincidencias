@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GeoIncidencias — Mis Apoyos</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.css?v=1">
+  <link rel="stylesheet" href="styles.min.css?v=20260731-6"/>
+</head>
+<body>
+
+<div id="sidebarContainer"></div>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Mis apoyos</div>
+      <div class="page-subtitle">Historial de incidencias que has apoyado</div>
+    </div>
+  </div>
+
+  <!-- Saldo -->
+  <div class="stat-grid mb-24" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-card stat-green">
+      <div class="stat-label">Total ganado</div>
+      <div class="stat-value" id="saldoPagado">—</div>
+      <div class="stat-footer">Pagos recibidos</div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-label">Pendiente de pago</div>
+      <div class="stat-value" id="saldoPendiente">—</div>
+      <div class="stat-footer">En revisión</div>
+    </div>
+    <div class="stat-card stat-cyan">
+      <div class="stat-label">Apoyos completados</div>
+      <div class="stat-value" id="apoyosCompletados">—</div>
+      <div class="stat-footer">Incidencias resueltas</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:20px;">
+    <button class="btn btn-primary" id="tabDisponibles" onclick="cambiarTab('disponibles')">◎ Disponibles para apoyar</button>
+    <button class="btn btn-ghost" id="tabMisApoyos" onclick="cambiarTab('mis-apoyos')">⟳ Mis apoyos registrados</button>
+  </div>
+
+  <!-- Panel disponibles -->
+  <div id="panelDisponibles">
+    <div class="card" style="padding:0;">
+      <div class="card-header" style="padding:14px 18px;margin:0;">
+        <span class="card-title">◎ Incidencias que puedes apoyar</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="gi-table">
+          <thead><tr><th>Incidencia</th><th>Tipo</th><th>Zona</th><th>Prioridad</th><th>Incentivo</th><th>Acción</th></tr></thead>
+          <tbody id="tbodyDisponibles">
+            <tr><td colspan="6" style="text-align:center;padding:50px;color:var(--text-muted);"><span class="spin">⟳</span> Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel mis apoyos -->
+  <div id="panelMisApoyos" style="display:none;">
+    <div class="card" style="padding:0;">
+      <div class="card-header" style="padding:14px 18px;margin:0;">
+        <span class="card-title">⟳ Historial de apoyos</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="gi-table">
+          <thead><tr><th>Incidencia</th><th>Prioridad</th><th>Monto</th><th>Estado pago</th><th>Fecha apoyo</th></tr></thead>
+          <tbody id="tbodyMisApoyos">
+            <tr><td colspan="5" style="text-align:center;padding:50px;color:var(--text-muted);"><span class="spin">⟳</span> Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="js/auth-guard.js?v=20260731-2"></script>
+<script src="js/sidebar.js?v=20260731-2"></script>
+<script src="js/mis-apoyos.js?v=20260725-1"></script>
+<script>
+exigirSesion();
+inyectarSidebar('mis-apoyos');
+inicializarBarraUsuario();
+</script>
+</body>
+</html>

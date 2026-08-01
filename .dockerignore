@@ -1,0 +1,7 @@
+.git
+**/.git
+backend-laravel/vendor
+backend-laravel/node_modules
+backend-laravel/storage/logs/*
+backend-laravel/.env
+*.zip

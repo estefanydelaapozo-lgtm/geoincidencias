@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GeoIncidencias — Panel de Supervisor</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cartocdn.com" crossorigin>
+  <link rel="dns-prefetch" href="//unpkg.com">
+  <link rel="dns-prefetch" href="//cartocdn.com">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.css?v=1">
+  <link rel="stylesheet" href="styles.min.css?v=20260731-6"/>
+</head>
+<body>
+
+<div id="sidebarContainer"></div>
+<div id="toastContainer"></div>
+
+<!-- Modal rechazar incidencia -->
+<div class="modal-backdrop" id="modalRechazarSup">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-head">
+      <h3 style="color:var(--coral);">✕ Rechazar incidencia</h3>
+      <button class="btn-close-modal" onclick="cerrarModal('modalRechazarSup')">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="form-label">Motivo del rechazo</label>
+      <textarea id="motivoRechazarSup" class="form-control" rows="3" placeholder="Describe el motivo…" style="resize:vertical;"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModal('modalRechazarSup')">Cancelar</button>
+      <button class="btn btn-coral btn-sm" onclick="confirmarRechazarSupervisor()">Rechazar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal eliminar incidencia -->
+<div class="modal-backdrop" id="modalEliminarSup">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-head">
+      <h3 style="color:var(--coral);">⚠ Eliminar incidencia</h3>
+      <button class="btn-close-modal" onclick="cerrarModal('modalEliminarSup')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-secondary);font-size:.9rem;">Esta acción no se puede deshacer. ¿Confirmas la eliminación?</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModal('modalEliminarSup')">Cancelar</button>
+      <button class="btn btn-coral btn-sm" onclick="confirmarEliminarSupervisor()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle de supervisión -->
+<div class="modal-backdrop" id="modalSupervisor">
+  <div class="modal-box" style="max-width:760px;">
+    <div class="modal-head">
+      <h3>🧭 Detalle de la incidencia</h3>
+      <button class="btn-close-modal" onclick="cerrarModalSupervisor()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="sup_id"/>
+      <div class="grid-2" style="gap:16px;">
+
+        <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div id="sup_titulo" style="font-weight:700;font-size:1.05rem;color:var(--text-primary);"></div>
+            <div id="sup_meta" style="font-size:.78rem;color:var(--text-muted);margin-top:2px;"></div>
+          </div>
+          <span id="sup_badgeEstado"></span>
+        </div>
+
+        <div id="sup_descripcion" style="grid-column:1/-1;font-size:.85rem;color:var(--text-secondary);"></div>
+
+        <!-- Foto -->
+        <div>
+          <label class="form-label">📷 Fotografía</label>
+          <div id="sup_fotoWrap" style="border:1px solid var(--border-light);border-radius:10px;overflow:hidden;height:220px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.02);">
+            <span id="sup_sinFoto" style="color:var(--text-muted);font-size:.8rem;">Sin foto adjunta</span>
+            <img id="sup_foto" alt="Foto de la incidencia" style="display:none;width:100%;height:100%;object-fit:cover;cursor:zoom-in;"/>
+          </div>
+        </div>
+
+        <!-- Mapa -->
+        <div>
+          <label class="form-label">🗺 Ubicación exacta <span style="font-size:.72rem;color:var(--text-muted);font-weight:400;">(haz clic en el mapa para corregirla)</span></label>
+          <div id="mapaSupervisor" class="map-container" style="height:220px;"></div>
+          <input type="text" id="sup_direccion" class="form-control" maxlength="255" placeholder="Dirección o referencia del lugar" style="margin-top:8px;"/>
+          <div id="sup_coords" style="margin-top:6px;font-size:.75rem;color:var(--text-muted);font-family:'Space Mono',monospace;"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <a id="sup_comoLlegar" href="#" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="display:none;">📍 Cómo llegar</a>
+            <button type="button" class="btn btn-primary btn-sm" onclick="guardarUbicacionSupervisor()">💾 Guardar ubicación</button>
+          </div>
+        </div>
+
+        <!-- Aprobación -->
+        <div style="grid-column:1/-1;border-top:1px solid var(--border-light);padding-top:14px;">
+          <label class="form-label">Estado de aprobación</label>
+          <div id="sup_badgeAprobacion" style="margin-bottom:8px;"></div>
+          <div id="sup_plazoAviso" style="font-size:.75rem;color:var(--text-muted);margin-bottom:8px;"></div>
+          <div id="sup_historialAprobacion" style="display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--text-secondary);margin-bottom:10px;"></div>
+          <div id="sup_accionesAprobacion" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        </div>
+
+        <!-- Cambiar estado (solo Supervisor) -->
+        <div id="sup_bloqueCambiarEstado" style="grid-column:1/-1;border-top:1px solid var(--border-light);padding-top:14px;">
+          <label class="form-label">Estado de la incidencia</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select id="sup_estado" class="form-select" style="flex:1;min-width:200px;"></select>
+            <button type="button" class="btn btn-primary btn-sm" id="sup_btnActualizarEstado" onclick="cambiarEstadoSupervisor()">Actualizar estado</button>
+          </div>
+          <div id="sup_avisoEstadoBloqueado" style="margin-top:6px;font-size:.75rem;color:var(--text-muted);"></div>
+        </div>
+
+        <!-- Observaciones del supervisor -->
+        <div style="grid-column:1/-1;border-top:1px solid var(--border-light);padding-top:14px;">
+          <label class="form-label">Observaciones del supervisor</label>
+          <div id="sup_comentarios" style="display:flex;flex-direction:column;gap:8px;max-height:180px;overflow:auto;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:8px;">
+            <input id="sup_nuevaObs" class="form-control" maxlength="1000" placeholder="Agrega una observación de seguimiento…"/>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="agregarObservacionSupervisor()">Agregar</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModalSupervisor()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Panel de Supervisor</div>
+      <div class="page-subtitle">Revisa, ubica y da seguimiento a todas las incidencias registradas</div>
+    </div>
+  </div>
+
+  <!-- Centro de monitoreo -->
+  <div class="monitor-strip mb-24">
+    <div>
+      <div id="supMiniLeyenda" class="map-leyenda" style="padding:0 0 8px;"></div>
+      <div id="supMiniMapa" class="monitor-map map-skeleton"></div>
+    </div>
+    <div class="monitor-card"><div class="monitor-value" id="mon_pendientes">—</div><div class="monitor-label">⏳ Por revisar</div></div>
+    <div class="monitor-card"><div class="monitor-value" id="mon_proceso">—</div><div class="monitor-label">⋯ En proceso</div></div>
+    <div class="monitor-card"><div class="monitor-value" id="mon_alta">—</div><div class="monitor-label">▲ Prioridad alta</div></div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-24" style="padding:16px 20px;">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end;flex-wrap:wrap;">
+      <div>
+        <label class="form-label">Buscar</label>
+        <input type="text" id="supBuscar" class="form-control" placeholder="Título o descripción…" oninput="debounceSup(()=>cargarSupervisorIncidencias(1),400)()"/>
+      </div>
+      <div>
+        <label class="form-label">Estado</label>
+        <select id="supFiltroEstado" class="form-select" onchange="cargarSupervisorIncidencias(1)">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Aprobación</label>
+        <select id="supFiltroAprobacion" class="form-select" onchange="cargarSupervisorIncidencias(1)">
+          <option value="">Todas</option>
+          <option value="pendiente_revision">⏳ Pendientes de revisión</option>
+          <option value="aprobada">✓ Aprobadas</option>
+          <option value="rechazada">✕ Rechazadas</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="limpiarFiltrosSupervisor()" style="height:40px;">↺ Limpiar</button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card" style="padding:0;">
+    <div class="card-header" style="padding:14px 18px;margin:0;">
+      <span class="card-title">🧭 Incidencias registradas</span>
+      <span id="supTotalLabel" style="font-size:.75rem;color:var(--text-muted);"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="gi-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Foto</th>
+            <th>Incidencia</th>
+            <th>Zona</th>
+            <th>Prioridad</th>
+            <th>Estado</th>
+            <th>Aprobación</th>
+            <th>Fecha de registro</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbodySupervisor">
+          <tr><td colspan="9" style="text-align:center;padding:50px;color:var(--text-muted);"><span class="spin">⟳</span> Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:14px 18px;border-top:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;">
+      <span id="supPaginaInfo" style="font-size:.78rem;color:var(--text-muted);"></span>
+      <div class="pagination" id="supPaginacion"></div>
+    </div>
+  </div>
+  <div style="text-align:right;margin-top:8px;font-size:.65rem;color:var(--text-muted);opacity:.5;">build 2026-07-30-f</div>
+</main>
+
+<script src="js/auth-guard.js?v=20260731-2"></script>
+<script src="js/map-loader.min.js?v=20260731-3"></script>
+<script src="js/sidebar.js?v=20260731-2"></script>
+<script src="js/supervisor.min.js?v=20260731-6"></script>
+<script>
+exigirSesion();
+const uSup = getUsuario();
+if (!uSup || !['admin','supervisor'].includes(uSup.rol)) window.location.href = 'index.html';
+inyectarSidebar('supervisor');
+inicializarBarraUsuario();
+</script>
+</body>
+</html>
